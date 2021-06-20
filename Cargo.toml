@@ -1,0 +1,9 @@
+[package]
+name = "textgen"
+version = "0.1.0"
+authors = ["Antoine Sébert <antoine.sb@orange.fr>"]
+edition = "2018"
+description = "Convincing randomly generated nonsense from a corpus, based on sequence adjacency probability."
+
+[dependencies]
+clap = "3.0.0-beta.2"
