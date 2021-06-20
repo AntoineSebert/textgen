@@ -41,3 +41,7 @@ OPTIONS:
 ### Library
 
 You can find examples in the code files, as documentation comments.
+
+## Data
+
+In the [data](data) folder, you can find sample corpuses in french, english, danish, feroese and romanian. The corpus files does not have to be present there for the program to work. The longer the corpus, the more accurate the output; but of course the processing time will grow as well.
