@@ -1,28 +1,3 @@
-//! Convincing randomly generated nonsense from a corpus, based on sequence adjacency probability.
-//! The universe has no purpose, life has no intrinsic meaning.
-//!
-//! # About
-//!
-//! # Example
-//!
-//! ```rust
-//!
-//! ```
-//!
-//! # Getting started
-//!
-//! ## Self-standing binary
-//!
-//! ## Library
-//!
-//! ```rust
-//! ```
-//!
-//! # Command Line options
-//!
-//! ```
-//! ```
-
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
@@ -38,7 +13,7 @@ type FlatAdjacencyMatrix = HashMap<String, Vec<String>>;
 /// ```
 /// use textgen::get_file_content;
 ///
-/// let content = get_file_content("myfile.txt".into());
+/// let corpus = get_file_content("myfile.txt".into(), true);
 /// ```
 fn get_corpus(input: String, inline_mode: bool) -> Vec<char> {
     let mut corpus = String::new();
@@ -71,7 +46,18 @@ fn get_corpus(input: String, inline_mode: bool) -> Vec<char> {
 
 /// Returns a random value from an [type@FlatAdjacencyMatrix].
 ///
+/// # Examples
+///
 /// ```
+/// use textgen::{get_rand_value, get_file_content};
+///
+/// let corpus = get_file_content("myfile.txt".into(), true);
+/// let flat_matrix = flatten_adjacency_matrix(&create_weighted_adjacency_matrix(&corpus, 3, 2));
+/// let mut sentence: String = String::new();
+/// let mut cmd = Command::new("sh");
+/// cmd.args(&["-c", "od -vAn -N4 -tu4 < /dev/urandom"]);
+///
+/// let value = get_rand_value(cmd, flat_matrix, 3, &sentence);
 /// ```
 fn get_rand_value(
     cmd: &mut Command,
@@ -79,18 +65,36 @@ fn get_rand_value(
     key_len: u8,
     sentence: &str,
 ) -> String {
-    let key: String = sentence
-        .chars()
-        .skip(sentence.chars().count() - key_len as usize)
-        .collect();
-    let possible_values = flat_matrix.get(&key).unwrap();
+    let possible_values = flat_matrix
+        .get(
+            &sentence
+                .chars()
+                .skip(sentence.chars().count() - key_len as usize)
+                .collect::<String>(),
+        )
+        .unwrap();
 
     possible_values[get_rand(cmd, possible_values.len())].clone()
 }
 
 /// Generates a sentence of values from an [type@FlatAdjacencyMatrix]. If possible, starts with a capitalized letter and ends with a dot.
 ///
+/// # Examples
+///
 /// ```
+/// use textgen::{get_rand_value, get_file_content, flatten_adjacency_matrix, create_weighted_adjacency_matrix};
+///
+/// let corpus = get_file_content("myfile.txt".into(), true);
+/// let flat_matrix = flatten_adjacency_matrix(&create_weighted_adjacency_matrix(&corpus, 3, 2));
+/// let mut cmd = Command::new("sh");
+/// cmd.args(&["-c", "od -vAn -N4 -tu4 < /dev/urandom"]);
+/// let capitalized_start: Vec<String> = flat_matrix
+/// 	.keys()
+/// 	.filter(|s| s.chars().next().unwrap().is_uppercase())
+/// 	.cloned()
+/// 	.collect();
+///
+/// let sentence = gen_sentence(&mut cmd, &flat_matrix, &capitalized_start, 3);
 /// ```
 fn gen_sentence(
     cmd: &mut Command,
@@ -134,10 +138,15 @@ fn get_rand(cmd: &mut Command, max: usize) -> usize {
     output.trim_start().parse::<usize>().unwrap() % max
 }
 
-// https://lib.rs/crates/rayon
 /// Creates an [type@AdjacencyMatrix] with sequence of chars as keys and a weighted list of sequence of chars as values.
 ///
+/// # Examples
+///
 /// ```
+/// use textgen::{get_file_content, create_weighted_adjacency_matrix};
+///
+/// let corpus = get_file_content("myfile.txt".into(), true);
+/// let matrix = &create_weighted_adjacency_matrix(&corpus, 3, 2);
 /// ```
 fn create_weighted_adjacency_matrix(corpus: &[char], key_len: u8, val_len: u8) -> AdjacencyMatrix {
     let mut adjacency = AdjacencyMatrix::new();
@@ -160,7 +169,13 @@ fn create_weighted_adjacency_matrix(corpus: &[char], key_len: u8, val_len: u8) -
 
 /// Flattens the matrix by collapsing the sequence of chars in the values by their weight.
 ///
+/// # Examples
+///
 /// ```
+/// use textgen::{get_file_content, flatten_adjacency_matrix, create_weighted_adjacency_matrix};
+///
+/// let corpus = get_file_content("myfile.txt".into(), true);
+/// let flat_matrix = flatten_adjacency_matrix(&create_weighted_adjacency_matrix(&corpus, 3, 2));
 /// ```
 fn flatten_adjacency_matrix(matrix: &AdjacencyMatrix) -> FlatAdjacencyMatrix {
     let mut _matrix = FlatAdjacencyMatrix::new();
@@ -182,7 +197,15 @@ fn flatten_adjacency_matrix(matrix: &AdjacencyMatrix) -> FlatAdjacencyMatrix {
 
 /// Generates the output from the [type@FlatAdjacencyMatrix], depending on the mode.
 ///
+/// # Examples
+///
 /// ```
+/// use textgen::{get_file_content, flatten_adjacency_matrix, create_weighted_adjacency_matrix};
+///
+/// let corpus = get_file_content("myfile.txt".into(), true);
+/// let flat_matrix = flatten_adjacency_matrix(&create_weighted_adjacency_matrix(&corpus, 3, 2));
+///
+/// let sequences = generate_sequences(&flat_matrix, true | !corpus.contains(&'.'), 5, 3)
 /// ```
 fn generate_sequences(
     flat_matrix: &FlatAdjacencyMatrix,
@@ -227,6 +250,15 @@ fn generate_sequences(
     }
 }
 
+/// Extracts the corpus, creates the matrix and produce the output.
+///
+/// # Examples
+///
+/// ```
+/// use textgen::generate;
+///
+/// let output = generate("myfile.txt".into(), false, 3, 2, 5, false, false);
+/// ```
 pub fn generate(
     input: String,
     inline_mode: bool,
